@@ -111,8 +111,8 @@ struct db_query db_sqlite3_queries[] = {
          .readonly = false,
     },
     {
-         .name = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1  );",
-         .query = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1  );",
+         .name = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     (COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1)::varchar  );",
+         .query = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     (COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1)::varchar  );",
          .placeholders = 0,
          .readonly = false,
     },
@@ -1780,4 +1780,4 @@ struct db_query db_sqlite3_queries[] = {
 
 #endif /* LIGHTNINGD_WALLET_GEN_DB_SQLITE3 */
 
-// SHA256STAMP:ca47a99b5c64139f4556f3bf77a6d984cb9ab6b38bcd2851bc551c75c5cc240a
+// SHA256STAMP:aada81ca4a0b3ca6af3e5f05b8f93039afbadb733a78dd7b3c34bb1a0def4cfd

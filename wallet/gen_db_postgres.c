@@ -111,8 +111,8 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     (COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1)::varchar  );",
-         .query = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     (COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1)::varchar  );",
+         .name = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1  );",
+         .query = "INSERT INTO vars(name, val)  VALUES('next_pay_index',     COALESCE((SELECT MAX(pay_index) FROM invoices WHERE state=1), 0) + 1  );",
          .placeholders = 0,
          .readonly = false,
     },
@@ -208,7 +208,7 @@ struct db_query db_postgres_queries[] = {
     },
     {
          .name = "UPDATE invoices   SET paid_timestamp = CURRENT_TIMESTAMP() WHERE state = 1;",
-         .query = "UPDATE invoices   SET paid_timestamp = EXTRACT(epoch FROM now())::int WHERE state = 1;",
+         .query = "UPDATE invoices   SET paid_timestamp = EXTRACT(epoch FROM now()) WHERE state = 1;",
          .placeholders = 0,
          .readonly = false,
     },
@@ -807,72 +807,6 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "ALTER TABLE channels ADD COLUMN option_anchor_outputs INTEGER DEFAULT 0;",
-         .query = "ALTER TABLE channels ADD COLUMN option_anchor_outputs INTEGER DEFAULT 0;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE outputs ADD option_anchor_outputs INTEGER DEFAULT 0;",
-         .query = "ALTER TABLE outputs ADD option_anchor_outputs INTEGER DEFAULT 0;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE channels ADD full_channel_id BLOB DEFAULT NULL;",
-         .query = "ALTER TABLE channels ADD full_channel_id BYTEA DEFAULT NULL;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE channels ADD funding_psbt BLOB DEFAULT NULL;",
-         .query = "ALTER TABLE channels ADD funding_psbt BYTEA DEFAULT NULL;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE channels ADD closer INTEGER DEFAULT 2;",
-         .query = "ALTER TABLE channels ADD closer INTEGER DEFAULT 2;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE channels ADD state_change_reason INTEGER DEFAULT 0;",
-         .query = "ALTER TABLE channels ADD state_change_reason INTEGER DEFAULT 0;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "CREATE TABLE channel_state_changes (  channel_id BIGINT REFERENCES channels(id) ON DELETE CASCADE,  timestamp BIGINT,  old_state INTEGER,  new_state INTEGER,  cause INTEGER,  message TEXT);",
-         .query = "CREATE TABLE channel_state_changes (  channel_id BIGINT REFERENCES channels(id) ON DELETE CASCADE,  timestamp BIGINT,  old_state INTEGER,  new_state INTEGER,  cause INTEGER,  message TEXT);",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "CREATE TABLE offers (  offer_id BLOB, bolt12 TEXT, label TEXT, status INTEGER, PRIMARY KEY (offer_id));",
-         .query = "CREATE TABLE offers (  offer_id BYTEA, bolt12 TEXT, label TEXT, status INTEGER, PRIMARY KEY (offer_id));",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE invoices ADD COLUMN local_offer_id BLOB DEFAULT NULL REFERENCES offers(offer_id);",
-         .query = "ALTER TABLE invoices ADD COLUMN local_offer_id BYTEA DEFAULT NULL REFERENCES offers(offer_id);",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE payments ADD COLUMN local_offer_id BLOB DEFAULT NULL REFERENCES offers(offer_id);",
-         .query = "ALTER TABLE payments ADD COLUMN local_offer_id BYTEA DEFAULT NULL REFERENCES offers(offer_id);",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
-         .name = "ALTER TABLE channels ADD funding_tx_remote_sigs_received INTEGER DEFAULT 0;",
-         .query = "ALTER TABLE channels ADD funding_tx_remote_sigs_received INTEGER DEFAULT 0;",
-         .placeholders = 0,
-         .readonly = false,
-    },
-    {
          .name = "UPDATE vars SET intval = intval + 1 WHERE name = 'data_version' AND intval = ?",
          .query = "UPDATE vars SET intval = intval + 1 WHERE name = 'data_version' AND intval = $1",
          .placeholders = 1,
@@ -945,18 +879,6 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "SELECT id, funding_tx_id, funding_tx_outnum FROM channels;",
-         .query = "SELECT id, funding_tx_id, funding_tx_outnum FROM channels;",
-         .placeholders = 0,
-         .readonly = true,
-    },
-    {
-         .name = "UPDATE channels SET full_channel_id = ? WHERE id = ?;",
-         .query = "UPDATE channels SET full_channel_id = $1 WHERE id = $2;",
-         .placeholders = 2,
-         .readonly = false,
-    },
-    {
          .name = "SELECT   c.id, p.node_id, c.last_tx, c.funding_satoshi, c.fundingkey_remote, c.last_sig FROM channels c  LEFT OUTER JOIN peers p  ON p.id = c.peer_id;",
          .query = "SELECT   c.id, p.node_id, c.last_tx, c.funding_satoshi, c.fundingkey_remote, c.last_sig FROM channels c  LEFT OUTER JOIN peers p  ON p.id = c.peer_id;",
          .placeholders = 0,
@@ -987,9 +909,9 @@ struct db_query db_postgres_queries[] = {
          .readonly = true,
     },
     {
-         .name = "INSERT INTO invoices            ( payment_hash, payment_key, state            , msatoshi, label, expiry_time            , pay_index, msatoshi_received            , paid_timestamp, bolt11, description, features, local_offer_id)     VALUES ( ?, ?, ?            , ?, ?, ?            , NULL, NULL            , NULL, ?, ?, ?, ?);",
-         .query = "INSERT INTO invoices            ( payment_hash, payment_key, state            , msatoshi, label, expiry_time            , pay_index, msatoshi_received            , paid_timestamp, bolt11, description, features, local_offer_id)     VALUES ( $1, $2, $3            , $4, $5, $6            , NULL, NULL            , NULL, $7, $8, $9, $10);",
-         .placeholders = 10,
+         .name = "INSERT INTO invoices            ( payment_hash, payment_key, state            , msatoshi, label, expiry_time            , pay_index, msatoshi_received            , paid_timestamp, bolt11, description, features)     VALUES ( ?, ?, ?            , ?, ?, ?            , NULL, NULL            , NULL, ?, ?, ?);",
+         .query = "INSERT INTO invoices            ( payment_hash, payment_key, state            , msatoshi, label, expiry_time            , pay_index, msatoshi_received            , paid_timestamp, bolt11, description, features)     VALUES ( $1, $2, $3            , $4, $5, $6            , NULL, NULL            , NULL, $7, $8, $9);",
+         .placeholders = 9,
          .readonly = false,
     },
     {
@@ -1035,12 +957,6 @@ struct db_query db_postgres_queries[] = {
          .readonly = true,
     },
     {
-         .name = "SELECT local_offer_id FROM invoices WHERE id = ?;",
-         .query = "SELECT local_offer_id FROM invoices WHERE id = $1;",
-         .placeholders = 1,
-         .readonly = true,
-    },
-    {
          .name = "UPDATE invoices   SET state=?     , pay_index=?     , msatoshi_received=?     , paid_timestamp=? WHERE id=?;",
          .query = "UPDATE invoices   SET state=$1     , pay_index=$2     , msatoshi_received=$3     , paid_timestamp=$4 WHERE id=$5;",
          .placeholders = 5,
@@ -1053,8 +969,8 @@ struct db_query db_postgres_queries[] = {
          .readonly = true,
     },
     {
-         .name = "SELECT  state, payment_key, payment_hash, label, msatoshi, expiry_time, pay_index, msatoshi_received, paid_timestamp, bolt11, description, features, local_offer_id FROM invoices WHERE id = ?;",
-         .query = "SELECT  state, payment_key, payment_hash, label, msatoshi, expiry_time, pay_index, msatoshi_received, paid_timestamp, bolt11, description, features, local_offer_id FROM invoices WHERE id = $1;",
+         .name = "SELECT  state, payment_key, payment_hash, label, msatoshi, expiry_time, pay_index, msatoshi_received, paid_timestamp, bolt11, description, features FROM invoices WHERE id = ?;",
+         .query = "SELECT  state, payment_key, payment_hash, label, msatoshi, expiry_time, pay_index, msatoshi_received, paid_timestamp, bolt11, description, features FROM invoices WHERE id = $1;",
          .placeholders = 1,
          .readonly = true,
     },
@@ -1071,9 +987,9 @@ struct db_query db_postgres_queries[] = {
          .readonly = true,
     },
     {
-         .name = "INSERT INTO outputs (  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-         .query = "INSERT INTO outputs (  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
-         .placeholders = 13,
+         .name = "INSERT INTO outputs (  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+         .query = "INSERT INTO outputs (  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12);",
+         .placeholders = 12,
          .readonly = false,
     },
     {
@@ -1089,38 +1005,38 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs",
-         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs",
+         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs",
+         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs",
          .placeholders = 0,
          .readonly = true,
     },
     {
-         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status= ? ",
-         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status= $1 ",
+         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status= ? ",
+         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status= $1 ",
          .placeholders = 1,
          .readonly = true,
     },
     {
-         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE channel_id IS NOT NULL AND confirmation_height IS NULL",
-         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE channel_id IS NOT NULL AND confirmation_height IS NULL",
+         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE channel_id IS NOT NULL AND confirmation_height IS NULL",
+         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE channel_id IS NOT NULL AND confirmation_height IS NULL",
          .placeholders = 0,
          .readonly = true,
     },
     {
-         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE prev_out_tx = ? AND prev_out_index = ?",
-         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE prev_out_tx = $1 AND prev_out_index = $2",
+         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE prev_out_tx = ? AND prev_out_index = ?",
+         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey, reserved_til FROM outputs WHERE prev_out_tx = $1 AND prev_out_index = $2",
          .placeholders = 2,
          .readonly = true,
     },
     {
-         .name = "UPDATE outputs SET status=?, reserved_til=? WHERE prev_out_tx=? AND prev_out_index=?",
-         .query = "UPDATE outputs SET status=$1, reserved_til=$2 WHERE prev_out_tx=$3 AND prev_out_index=$4",
+         .name = "UPDATE outputs SET status=?, reserved_til=?WHERE prev_out_tx=? AND prev_out_index=?",
+         .query = "UPDATE outputs SET status=$1, reserved_til=$2WHERE prev_out_tx=$3 AND prev_out_index=$4",
          .placeholders = 4,
          .readonly = false,
     },
     {
-         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status = ? OR (status = ? AND reserved_til <= ?)ORDER BY RANDOM();",
-         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, option_anchor_outputs, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status = $1 OR (status = $2 AND reserved_til <= $3)ORDER BY RANDOM();",
+         .name = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status = ? OR (status = ? AND reserved_til <= ?)ORDER BY RANDOM();",
+         .query = "SELECT  prev_out_tx, prev_out_index, value, type, status, keyindex, channel_id, peer_id, commitment_point, confirmation_height, spend_height, scriptpubkey , reserved_til FROM outputs WHERE status = $1 OR (status = $2 AND reserved_til <= $3)ORDER BY RANDOM();",
          .placeholders = 3,
          .readonly = true,
     },
@@ -1191,8 +1107,8 @@ struct db_query db_postgres_queries[] = {
          .readonly = true,
     },
     {
-         .name = "SELECT  id, peer_id, short_channel_id, full_channel_id, channel_config_local, channel_config_remote, state, funder, channel_flags, minimum_depth, next_index_local, next_index_remote, next_htlc_id, funding_tx_id, funding_tx_outnum, funding_satoshi, our_funding_satoshi, funding_locked_remote, funding_tx_remote_sigs_received, push_msatoshi, msatoshi_local, fundingkey_remote, revocation_basepoint_remote, payment_basepoint_remote, htlc_basepoint_remote, delayed_payment_basepoint_remote, per_commit_remote, old_per_commit_remote, local_feerate_per_kw, remote_feerate_per_kw, shachain_remote_id, shutdown_scriptpubkey_remote, shutdown_keyidx_local, last_sent_commit_state, last_sent_commit_id, last_tx, last_sig, last_was_revoke, first_blocknum, min_possible_feerate, max_possible_feerate, msatoshi_to_us_min, msatoshi_to_us_max, future_per_commitment_point, last_sent_commit, feerate_base, feerate_ppm, remote_upfront_shutdown_script, option_static_remotekey, option_anchor_outputs, shutdown_scriptpubkey_local, funding_psbt, closer, state_change_reason FROM channels WHERE state != ?;",
-         .query = "SELECT  id, peer_id, short_channel_id, full_channel_id, channel_config_local, channel_config_remote, state, funder, channel_flags, minimum_depth, next_index_local, next_index_remote, next_htlc_id, funding_tx_id, funding_tx_outnum, funding_satoshi, our_funding_satoshi, funding_locked_remote, funding_tx_remote_sigs_received, push_msatoshi, msatoshi_local, fundingkey_remote, revocation_basepoint_remote, payment_basepoint_remote, htlc_basepoint_remote, delayed_payment_basepoint_remote, per_commit_remote, old_per_commit_remote, local_feerate_per_kw, remote_feerate_per_kw, shachain_remote_id, shutdown_scriptpubkey_remote, shutdown_keyidx_local, last_sent_commit_state, last_sent_commit_id, last_tx, last_sig, last_was_revoke, first_blocknum, min_possible_feerate, max_possible_feerate, msatoshi_to_us_min, msatoshi_to_us_max, future_per_commitment_point, last_sent_commit, feerate_base, feerate_ppm, remote_upfront_shutdown_script, option_static_remotekey, option_anchor_outputs, shutdown_scriptpubkey_local, funding_psbt, closer, state_change_reason FROM channels WHERE state != $1;",
+         .name = "SELECT  id, peer_id, short_channel_id, channel_config_local, channel_config_remote, state, funder, channel_flags, minimum_depth, next_index_local, next_index_remote, next_htlc_id, funding_tx_id, funding_tx_outnum, funding_satoshi, our_funding_satoshi, funding_locked_remote, push_msatoshi, msatoshi_local, fundingkey_remote, revocation_basepoint_remote, payment_basepoint_remote, htlc_basepoint_remote, delayed_payment_basepoint_remote, per_commit_remote, old_per_commit_remote, local_feerate_per_kw, remote_feerate_per_kw, shachain_remote_id, shutdown_scriptpubkey_remote, shutdown_keyidx_local, last_sent_commit_state, last_sent_commit_id, last_tx, last_sig, last_was_revoke, first_blocknum, min_possible_feerate, max_possible_feerate, msatoshi_to_us_min, msatoshi_to_us_max, future_per_commitment_point, last_sent_commit, feerate_base, feerate_ppm, remote_upfront_shutdown_script, option_static_remotekey, shutdown_scriptpubkey_local FROM channels WHERE state < ?;",
+         .query = "SELECT  id, peer_id, short_channel_id, channel_config_local, channel_config_remote, state, funder, channel_flags, minimum_depth, next_index_local, next_index_remote, next_htlc_id, funding_tx_id, funding_tx_outnum, funding_satoshi, our_funding_satoshi, funding_locked_remote, push_msatoshi, msatoshi_local, fundingkey_remote, revocation_basepoint_remote, payment_basepoint_remote, htlc_basepoint_remote, delayed_payment_basepoint_remote, per_commit_remote, old_per_commit_remote, local_feerate_per_kw, remote_feerate_per_kw, shachain_remote_id, shutdown_scriptpubkey_remote, shutdown_keyidx_local, last_sent_commit_state, last_sent_commit_id, last_tx, last_sig, last_was_revoke, first_blocknum, min_possible_feerate, max_possible_feerate, msatoshi_to_us_min, msatoshi_to_us_max, future_per_commitment_point, last_sent_commit, feerate_base, feerate_ppm, remote_upfront_shutdown_script, option_static_remotekey, shutdown_scriptpubkey_local FROM channels WHERE state < $1;",
          .placeholders = 1,
          .readonly = true,
     },
@@ -1257,9 +1173,9 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "UPDATE channels SET  shachain_remote_id=?,  short_channel_id=?,  full_channel_id=?,  state=?,  funder=?,  channel_flags=?,  minimum_depth=?,  next_index_local=?,  next_index_remote=?,  next_htlc_id=?,  funding_tx_id=?,  funding_tx_outnum=?,  funding_satoshi=?,  our_funding_satoshi=?,  funding_locked_remote=?,  funding_tx_remote_sigs_received=?,  push_msatoshi=?,  msatoshi_local=?,  shutdown_scriptpubkey_remote=?,  shutdown_keyidx_local=?,  channel_config_local=?,  last_tx=?, last_sig=?,  last_was_revoke=?,  min_possible_feerate=?,  max_possible_feerate=?,  msatoshi_to_us_min=?,  msatoshi_to_us_max=?,  feerate_base=?,  feerate_ppm=?,  remote_upfront_shutdown_script=?,  option_static_remotekey=?,  option_anchor_outputs=?,  shutdown_scriptpubkey_local=?,  funding_psbt=?,  closer=?,  state_change_reason=? WHERE id=?",
-         .query = "UPDATE channels SET  shachain_remote_id=$1,  short_channel_id=$2,  full_channel_id=$3,  state=$4,  funder=$5,  channel_flags=$6,  minimum_depth=$7,  next_index_local=$8,  next_index_remote=$9,  next_htlc_id=$10,  funding_tx_id=$11,  funding_tx_outnum=$12,  funding_satoshi=$13,  our_funding_satoshi=$14,  funding_locked_remote=$15,  funding_tx_remote_sigs_received=$16,  push_msatoshi=$17,  msatoshi_local=$18,  shutdown_scriptpubkey_remote=$19,  shutdown_keyidx_local=$20,  channel_config_local=$21,  last_tx=$22, last_sig=$23,  last_was_revoke=$24,  min_possible_feerate=$25,  max_possible_feerate=$26,  msatoshi_to_us_min=$27,  msatoshi_to_us_max=$28,  feerate_base=$29,  feerate_ppm=$30,  remote_upfront_shutdown_script=$31,  option_static_remotekey=$32,  option_anchor_outputs=$33,  shutdown_scriptpubkey_local=$34,  funding_psbt=$35,  closer=$36,  state_change_reason=$37 WHERE id=$38",
-         .placeholders = 38,
+         .name = "UPDATE channels SET  shachain_remote_id=?,  short_channel_id=?,  state=?,  funder=?,  channel_flags=?,  minimum_depth=?,  next_index_local=?,  next_index_remote=?,  next_htlc_id=?,  funding_tx_id=?,  funding_tx_outnum=?,  funding_satoshi=?,  our_funding_satoshi=?,  funding_locked_remote=?,  push_msatoshi=?,  msatoshi_local=?,  shutdown_scriptpubkey_remote=?,  shutdown_keyidx_local=?,  channel_config_local=?,  last_tx=?, last_sig=?,  last_was_revoke=?,  min_possible_feerate=?,  max_possible_feerate=?,  msatoshi_to_us_min=?,  msatoshi_to_us_max=?,  feerate_base=?,  feerate_ppm=?,  remote_upfront_shutdown_script=?,  option_static_remotekey=?,  shutdown_scriptpubkey_local=? WHERE id=?",
+         .query = "UPDATE channels SET  shachain_remote_id=$1,  short_channel_id=$2,  state=$3,  funder=$4,  channel_flags=$5,  minimum_depth=$6,  next_index_local=$7,  next_index_remote=$8,  next_htlc_id=$9,  funding_tx_id=$10,  funding_tx_outnum=$11,  funding_satoshi=$12,  our_funding_satoshi=$13,  funding_locked_remote=$14,  push_msatoshi=$15,  msatoshi_local=$16,  shutdown_scriptpubkey_remote=$17,  shutdown_keyidx_local=$18,  channel_config_local=$19,  last_tx=$20, last_sig=$21,  last_was_revoke=$22,  min_possible_feerate=$23,  max_possible_feerate=$24,  msatoshi_to_us_min=$25,  msatoshi_to_us_max=$26,  feerate_base=$27,  feerate_ppm=$28,  remote_upfront_shutdown_script=$29,  option_static_remotekey=$30,  shutdown_scriptpubkey_local=$31 WHERE id=$32",
+         .placeholders = 32,
          .readonly = false,
     },
     {
@@ -1285,18 +1201,6 @@ struct db_query db_postgres_queries[] = {
          .query = "UPDATE channels SET  last_sent_commit=$1 WHERE id=$2",
          .placeholders = 2,
          .readonly = false,
-    },
-    {
-         .name = "INSERT INTO channel_state_changes (  channel_id, timestamp, old_state, new_state, cause, message) VALUES (?, ?, ?, ?, ?, ?);",
-         .query = "INSERT INTO channel_state_changes (  channel_id, timestamp, old_state, new_state, cause, message) VALUES ($1, $2, $3, $4, $5, $6);",
-         .placeholders = 6,
-         .readonly = false,
-    },
-    {
-         .name = "SELECT timestamp, old_state, new_state, cause, message FROM channel_state_changes WHERE channel_id = ? ORDER BY timestamp ASC;",
-         .query = "SELECT timestamp, old_state, new_state, cause, message FROM channel_state_changes WHERE channel_id = $1 ORDER BY timestamp ASC;",
-         .placeholders = 1,
-         .readonly = true,
     },
     {
          .name = "SELECT id FROM peers WHERE node_id = ?",
@@ -1347,8 +1251,8 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "UPDATE channels SET state=?, peer_id=? WHERE channels.id=?",
-         .query = "UPDATE channels SET state=$1, peer_id=$2 WHERE channels.id=$3",
+         .name = "UPDATE channels SET state=?, peer_id=?WHERE channels.id=?",
+         .query = "UPDATE channels SET state=$1, peer_id=$2WHERE channels.id=$3",
          .placeholders = 3,
          .readonly = false,
     },
@@ -1419,9 +1323,9 @@ struct db_query db_postgres_queries[] = {
          .readonly = true,
     },
     {
-         .name = "INSERT INTO payments (  status,  payment_hash,  destination,  msatoshi,  timestamp,  path_secrets,  route_nodes,  route_channels,  msatoshi_sent,  description,  bolt11,  total_msat,  partid,  local_offer_id) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
-         .query = "INSERT INTO payments (  status,  payment_hash,  destination,  msatoshi,  timestamp,  path_secrets,  route_nodes,  route_channels,  msatoshi_sent,  description,  bolt11,  total_msat,  partid,  local_offer_id) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);",
-         .placeholders = 14,
+         .name = "INSERT INTO payments (  status,  payment_hash,  destination,  msatoshi,  timestamp,  path_secrets,  route_nodes,  route_channels,  msatoshi_sent,  description,  bolt11,  total_msat,  partid) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+         .query = "INSERT INTO payments (  status,  payment_hash,  destination,  msatoshi,  timestamp,  path_secrets,  route_nodes,  route_channels,  msatoshi_sent,  description,  bolt11,  total_msat,  partid) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
+         .placeholders = 13,
          .readonly = false,
     },
     {
@@ -1431,14 +1335,8 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "DELETE FROM payments WHERE payment_hash = ?",
-         .query = "DELETE FROM payments WHERE payment_hash = $1",
-         .placeholders = 1,
-         .readonly = false,
-    },
-    {
-         .name = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments WHERE payment_hash = ? AND partid = ?",
-         .query = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments WHERE payment_hash = $1 AND partid = $2",
+         .name = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid FROM payments WHERE payment_hash = ? AND partid = ?",
+         .query = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid FROM payments WHERE payment_hash = $1 AND partid = $2",
          .placeholders = 2,
          .readonly = true,
     },
@@ -1473,20 +1371,14 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments WHERE payment_hash = ?;",
-         .query = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments WHERE payment_hash = $1;",
+         .name = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid FROM payments WHERE payment_hash = ?;",
+         .query = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid FROM payments WHERE payment_hash = $1;",
          .placeholders = 1,
          .readonly = true,
     },
     {
-         .name = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments ORDER BY id;",
-         .query = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments ORDER BY id;",
-         .placeholders = 0,
-         .readonly = true,
-    },
-    {
-         .name = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments WHERE local_offer_id = ?;",
-         .query = "SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid, local_offer_id FROM payments WHERE local_offer_id = $1;",
+         .name = "SELECT * FROM (SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid FROM payments ORDER BY id DESC LIMIT ?)x ORDER BY id ASC;",
+         .query = "SELECT * FROM (SELECT  id, status, destination, msatoshi, payment_hash, timestamp, payment_preimage, path_secrets, route_nodes, route_channels, msatoshi_sent, description, bolt11, failonionreply, total_msat, partid FROM payments ORDER BY id DESC LIMIT $1)x ORDER BY id ASC;",
          .placeholders = 1,
          .readonly = true,
     },
@@ -1551,9 +1443,9 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "UPDATE outputs SET spend_height = ?,  status = ? WHERE prev_out_tx = ? AND prev_out_index = ?",
-         .query = "UPDATE outputs SET spend_height = $1,  status = $2 WHERE prev_out_tx = $3 AND prev_out_index = $4",
-         .placeholders = 4,
+         .name = "UPDATE outputs SET spend_height = ? WHERE prev_out_tx = ? AND prev_out_index = ?",
+         .query = "UPDATE outputs SET spend_height = $1 WHERE prev_out_tx = $2 AND prev_out_index = $3",
+         .placeholders = 3,
          .readonly = false,
     },
     {
@@ -1561,6 +1453,12 @@ struct db_query db_postgres_queries[] = {
          .query = "UPDATE utxoset SET spendheight = $1 WHERE txid = $2 AND outnum = $3",
          .placeholders = 3,
          .readonly = false,
+    },
+    {
+         .name = "SELECT blockheight, txindex FROM utxoset WHERE txid = ? AND outnum = ?",
+         .query = "SELECT blockheight, txindex FROM utxoset WHERE txid = $1 AND outnum = $2",
+         .placeholders = 2,
+         .readonly = true,
     },
     {
          .name = "INSERT INTO utxoset ( txid, outnum, blockheight, spendheight, txindex, scriptpubkey, satoshis) VALUES(?, ?, ?, ?, ?, ?, ?);",
@@ -1578,12 +1476,6 @@ struct db_query db_postgres_queries[] = {
          .name = "SELECT txid, spendheight, scriptpubkey, satoshis FROM utxoset WHERE blockheight = ? AND txindex = ? AND outnum = ? AND spendheight IS NULL",
          .query = "SELECT txid, spendheight, scriptpubkey, satoshis FROM utxoset WHERE blockheight = $1 AND txindex = $2 AND outnum = $3 AND spendheight IS NULL",
          .placeholders = 3,
-         .readonly = true,
-    },
-    {
-         .name = "SELECT blockheight, txindex, outnum FROM utxoset WHERE spendheight = ?",
-         .query = "SELECT blockheight, txindex, outnum FROM utxoset WHERE spendheight = $1",
-         .placeholders = 1,
          .readonly = true,
     },
     {
@@ -1713,48 +1605,6 @@ struct db_query db_postgres_queries[] = {
          .readonly = false,
     },
     {
-         .name = "SELECT 1  FROM offers WHERE offer_id = ?;",
-         .query = "SELECT 1  FROM offers WHERE offer_id = $1;",
-         .placeholders = 1,
-         .readonly = true,
-    },
-    {
-         .name = "INSERT INTO offers (  offer_id, bolt12, label, status) VALUES (?, ?, ?, ?);",
-         .query = "INSERT INTO offers (  offer_id, bolt12, label, status) VALUES ($1, $2, $3, $4);",
-         .placeholders = 4,
-         .readonly = false,
-    },
-    {
-         .name = "SELECT bolt12, label, status  FROM offers WHERE offer_id = ?;",
-         .query = "SELECT bolt12, label, status  FROM offers WHERE offer_id = $1;",
-         .placeholders = 1,
-         .readonly = true,
-    },
-    {
-         .name = "SELECT offer_id FROM offers;",
-         .query = "SELECT offer_id FROM offers;",
-         .placeholders = 0,
-         .readonly = true,
-    },
-    {
-         .name = "UPDATE offers SET status=? WHERE offer_id = ?;",
-         .query = "UPDATE offers SET status=$1 WHERE offer_id = $2;",
-         .placeholders = 2,
-         .readonly = false,
-    },
-    {
-         .name = "UPDATE invoices SET state=? WHERE state=? AND local_offer_id = ?;",
-         .query = "UPDATE invoices SET state=$1 WHERE state=$2 AND local_offer_id = $3;",
-         .placeholders = 3,
-         .readonly = false,
-    },
-    {
-         .name = "SELECT status  FROM offers WHERE offer_id = ?;",
-         .query = "SELECT status  FROM offers WHERE offer_id = $1;",
-         .placeholders = 1,
-         .readonly = true,
-    },
-    {
          .name = "SELECT name FROM sqlite_master WHERE type='table';",
          .query = "SELECT name FROM sqlite_master WHERE type='table';",
          .placeholders = 0,
@@ -1774,10 +1624,9 @@ struct db_query db_postgres_queries[] = {
     },
 };
 
-#define DB_POSTGRES_QUERY_COUNT 294
+#define DB_POSTGRES_QUERY_COUNT 269
 
 #endif /* HAVE_POSTGRES */
 
 #endif /* LIGHTNINGD_WALLET_GEN_DB_POSTGRES */
 
-// SHA256STAMP:aada81ca4a0b3ca6af3e5f05b8f93039afbadb733a78dd7b3c34bb1a0def4cfd

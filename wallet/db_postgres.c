@@ -41,6 +41,11 @@ static bool db_postgres_setup(struct db *db)
 		db->conn = NULL;
 		return false;
 	}
+
+	// This is necessary for CockroachDB otherwise it will use size 8 by default
+	// and break us. It's harmless for PostgreSQL.
+	PQexec(db->conn, "SET default_int_size = 4;");
+
 	return true;
 }
 

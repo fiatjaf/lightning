@@ -61,7 +61,7 @@ class PostgresRewriter(Rewriter):
 
         typemapping = {
             r'BLOB': 'BYTEA',
-            r'CURRENT_TIMESTAMP\(\)': "EXTRACT(epoch FROM now())",
+            r'CURRENT_TIMESTAMP\(\)': "EXTRACT(epoch FROM now())::int",
         }
 
         query = self.rewrite_types(query, typemapping)
